@@ -16,20 +16,28 @@ var re = {
     unblank: /\S/,
     punctuation: /[\/\.\,\?\!]/ig,
     file: /\S+\.\S+[^\/\?]/ig
+};
+
+function Lexer(){
+    // Split by urls, then numbers, then whitespace, then punctuation
+    this.regexs = [re.url, re.file, re.number, re.space, re.punctuation];
 }
 
 function LexerNode(string, regex, regexs){
+
+    var childElements = [];
+
     this.string = string;
     this.children = [];
 
     if (string) {
         this.matches = string.match(regex);
-        var childElements = string.split(regex);
+        childElements = string.split(regex);
     }
 
     if (!this.matches) {
         this.matches = [];
-        var childElements = [string];
+        childElements = [string];
     }
 
     if (!regexs.length) {
@@ -48,8 +56,12 @@ function LexerNode(string, regex, regexs){
 }
 
 LexerNode.prototype.fillArray = function(array){
+
+    var child;
+
     for (var i in this.children) {
-        var child = this.children[i];
+        
+        child = this.children[i];
 
         if (child.fillArray) {
             child.fillArray(array);
@@ -63,25 +75,20 @@ LexerNode.prototype.fillArray = function(array){
                 array.push(match);
         }
     }
-}
+};
 
 LexerNode.prototype.toString = function(){
     var array = [];
     this.fillArray(array);
     return array.toString();
-}
-
-function Lexer(){
-    // Split by urls, then numbers, then whitespace, then punctuation
-    this.regexs = [re.url, re.file, re.number, re.space, re.punctuation];
-}
+};
 
 Lexer.prototype.lex = function(string){
     var array = []
     , node = new LexerNode(string, this.regexs[0], this.regexs.slice(1));
     node.fillArray(array);
     return array;
-}
+};
 
 //var lexer = new Lexer();
 //print(lexer.lex("I made $5.60 today in 1 hour of work.  The E.M.T.'s were on time, but only barely.").toString());
